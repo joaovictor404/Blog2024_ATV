@@ -1,8 +1,10 @@
 from django.shortcuts import render,redirect
-from .forms import NoticiaForm, NoticiaFilterForm
+from .forms import NoticiaForm, NoticiaFilterForm, CategoriaForm, CategoriaFilterForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import Noticia, Categoria
+from django.db.models.functions import Lower
+from django.core.paginator import Paginator
 
 # Create your views here.
 @login_required
@@ -64,6 +66,64 @@ def editar_noticia(request, id):
     return render(request, 'gerencia/cadastro_noticia.html',contexto)
 
 
+
+
+
+@login_required(login_url="usuarios:login")
+def listagem_categoria(request):
+    formularioFiltro = CategoriaFilterForm(request.GET or None)
+    categorias_lista = Categoria.objects.all().order_by(Lower('nome'))
+    
+    if formularioFiltro.is_valid():
+        if formularioFiltro.cleaned_data['nome']:
+            categorias_lista = categorias_lista.filter(nome__icontains=formularioFiltro.cleaned_data['nome'])
+    
+    paginator = Paginator(categorias_lista, 5)
+    page = request.GET.get('page', 1)
+    categorias = paginator.get_page(page)
+    
+    contexto = {
+        'categorias': categorias,
+        'formularioFiltro': formularioFiltro
+    }
+    return render(request, 'gerencia/listagem_categoria.html', contexto)
+@login_required(login_url="usuarios:login")
+def cadastrar_categoria(request):
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST, request.FILES)
+        if form.is_valid():
+            categoria = form.save(commit=False)  
+            categoria.save()  # Salva a categoria no banco
+            return redirect('gerencia:listagem_categoria')  # Redireciona para página de sucesso
+    else:
+        form = CategoriaForm() 
+
+    contexto = {'form': form}
+    return render(request, 'gerencia/cadastro_categoria.html', contexto)
+
+@login_required(login_url="usuarios:login")
+def editar_categoria(request, id):
+    categoria = Categoria.objects.get(id=id)
+    if request.method == 'POST':
+        form = CategoriaForm(request.POST, request.FILES, instance=categoria)
+        if form.is_valid():
+            categoria_editada = form.save(commit=False)  # Não salva ainda
+            categoria_editada.usuario = request.user 
+            categoria_editada.save()  # Salva com o usuário intacto
+            return redirect('gerencia:listagem_categoria')
+    else:
+        form = CategoriaForm(instance=categoria)
+    
+    contexto = {
+        'form': form
+    }
+    return render(request, 'gerencia/cadastro_categoria.html',contexto)
+
+@login_required
+def excluir_categoria(request, id):
+    categoria = Categoria.objects.get(id=id)
+    categoria.delete()
+    return redirect('gerencia:listagem_categoria')
 
 
 def index(request):

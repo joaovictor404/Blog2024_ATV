@@ -1,11 +1,16 @@
 from django.db import models
 from usuarios.models import UserBlog
 
+# mudança da atividade
 class Categoria(models.Model):
-    nome = models.CharField(max_length=100)
+    nome = models.CharField(max_length=100, unique=True, null=False, blank=False)
     
     def __str__(self):
         return self.nome
+    class Meta:
+        verbose_name_plural = 'Categorias', 
+        ordering = ['nome']
+# fim da mudança
 
 class Noticia(models.Model):
     titulo = models.CharField(max_length=100)

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Noticia
+from .models import Noticia, Categoria
 
 class NoticiaForm(forms.ModelForm):
     
@@ -14,8 +14,18 @@ class NoticiaForm(forms.ModelForm):
             'categoria': forms.Select(attrs={'class': 'form-control'}),
 
         }
+# mudança da atividade
+class CategoriaForm(forms.ModelForm):
+    
+    class Meta:
+        model = Categoria
+        fields = '__all__'
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}), 
+            
 
-
+        }
+# fim da mudança
 
 from django import forms
 from .models import Categoria
@@ -44,4 +54,14 @@ class NoticiaFilterForm(forms.Form):
         label='Categoria',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+  
+# mudança da atividade
+class CategoriaFilterForm(forms.Form):
+    nome = forms.CharField(
+        max_length=200,
+        required=False,
+        label='Nome',
+        widget=forms.TextInput(attrs={'placeholder': 'Digite o nome','class': 'form-control'})
+    )
+# fim da mudança
   
